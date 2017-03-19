@@ -107,7 +107,7 @@ def sgd_hinge(x, y, max_iter, learning_rate, lmda):
 
 
 def logistic_loss(x, y, w, lmda):
-    #TODO: Compute (regularized) Logistic Loss
+    # TODO: Compute (regularized) Logistic Loss
     loss = 0
     return loss
 
@@ -127,7 +127,7 @@ def cross_validation(x, y, sgd, lmda, learning_rate, max_iter=100, sample=range(
         print "CROSS VALIDATION %s" % i
         
         training_indices = [j for j in range(x.shape[0]) if j != i]
-        W = sgd(x[training_indices, ], y[training_indices,], max_iter=max_iter, lmda=lmda, learning_rate=learning_rate)
+        W = sgd(x[training_indices, ], y[training_indices, ], max_iter=max_iter, lmda=lmda, learning_rate=learning_rate)
         print W
         y_hat = np.sign(x[i, ].dot(W))
 
