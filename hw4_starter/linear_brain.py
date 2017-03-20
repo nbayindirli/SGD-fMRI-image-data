@@ -96,8 +96,17 @@ data = starplus['data']
 
 def hinge_loss(x, y, w, lmda):
     # TODO: Compute (regularized) Hinge Loss
-    loss = 0
-    return loss
+    loss = 0                        # hinge loss term
+    reg = 0                         # regularization term
+
+    for xl, yl in zip(x, y):        # merges x and y for ease of iteration
+        xi = yl * np.dot(w, xl)     # calculate slack variable
+        loss += max(0, 1 - xi)      # calculate hinge loss
+
+    for wi in w:
+        reg += wi * wi              # calculate regularization term
+
+    return loss + lmda * reg
 
 
 def sgd_hinge(x, y, max_iter, learning_rate, lmda):
