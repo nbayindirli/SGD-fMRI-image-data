@@ -1,5 +1,6 @@
 import scipy.io as sio
 import numpy as np
+import math
 
 starplus = sio.loadmat("data-starplus-04847-v7.mat")
 
@@ -112,18 +113,29 @@ def hinge_loss(x, y, w, lmda):
 def sgd_hinge(x, y, max_iter, learning_rate, lmda):
     W = np.zeros(x.shape[1])
     # TODO: implement stochastic (sub) gradient descent with the hinge loss function
+
     return W
 
 
 def logistic_loss(x, y, w, lmda):
     # TODO: Compute (regularized) Logistic Loss
-    loss = 0
-    return loss
+    loss = 0                        # logistic loss term
+    reg = 0                         # regularization term
+
+    for xl, yl in zip(x, y):        # merges x and y for ease of iteration
+        p = -yl * np.dot(w, xl)
+        loss += math.log(1 + math.exp(p))
+
+    for wi in w:
+        reg += wi * wi              # calculate regularization term
+
+    return loss + lmda * reg
 
 
 def sgd_logistic(x, y, max_iter, learning_rate, lmda):
     W = np.zeros(x.shape[1])
     # TODO: implement stochastic gradient descent using the logistic loss function
+
     return W
 
 
