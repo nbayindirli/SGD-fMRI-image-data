@@ -42,6 +42,7 @@ colToROI   = metadata['colToROI']
 
 ###########################################
 info = starplus['info'][0]
+cond = info['cond']
 # info: This variable defines the experiment in terms of a sequence of 'trials'. 'info' is a 1x54 struct array,
 #       describing the 54 time intervals, or trials. Most of these time intervals correspond to trials during which the
 #       subject views a single picture and a single sentence, and presses a button to indicate whether the sentence
@@ -104,35 +105,34 @@ def hinge_loss(x, y, w, lmda):
         xi = yl * np.dot(w, xl)             # calculate slack variable
         loss += max(0, 1 - xi)              # calculate hinge loss
 
-    for wi in w:
-        reg += wi * wi                      # calculate regularization term
-
-    return loss + lmda * reg
+    return loss + lmda * np.dot(w, w)
 
 
 def sgd_hinge(x, y, max_iter, learning_rate, lmda):
     W = np.zeros(x.shape[1])
     # TODO: implement stochastic (sub) gradient descent with the hinge loss function
-    gradient = 0
-    reg = 0                                 # regularization term
-    loss = np.inf                           # current hinge loss
-    change = np.inf                         # difference in hinge loss
+    condition = False
     num_steps = 0
-    while abs(change) > 0.0001 or num_steps < max_iter:
-        change = loss - hinge_loss(x, y, W, lmda)   # calculate hinge loss
-        loss = hinge_loss(x, y, W, lmda)
-        for xl, yl in zip(x, y):            # merges x and y for ease of iteration
-            xi = yl * np.dot(W, xl)         # calculate slack variable
-            gradient += -yl * xl if xi < 1 else 0   # calculate gradient
+    np.random.seed(1)
 
-        for wi in W:
-            reg += wi  # calculate regularization term
+    while not condition and num_steps < max_iter:
+        trial = np.random.randint(0, len(y))
 
-        gradient += 2 * lmda * reg
-        W -= learning_rate * gradient       # update vector of parameters
+        old_loss = hinge_loss(x, y, W, lmda)
 
-        num_steps += 1
-        print num_steps, "---", abs(change)
+        if not cond[trial] == 0:
+            xi = y[trial] * np.dot(W, x[trial, :])                 # calculate slack variable
+            gradient = -y[trial] * x[trial, :] if xi < 1 else 0    # calculate gradient
+
+            gradient += 2 * lmda * W
+            W -= learning_rate * gradient                          # update vector of parameters
+
+            new_loss = hinge_loss(x, y, W, lmda)
+
+            if abs(new_loss - old_loss) <= 0.0001:
+                condition = True
+
+            num_steps += 1
 
     return W
 
@@ -140,21 +140,38 @@ def sgd_hinge(x, y, max_iter, learning_rate, lmda):
 def logistic_loss(x, y, w, lmda):
     # TODO: Compute (regularized) Logistic Loss
     loss = 0                                # logistic loss term
-    reg = 0                                 # regularization term
 
     for xl, yl in zip(x, y):                # merges x and y for ease of iteration
         p = -yl * np.dot(w, xl)
         loss += math.log(1 + math.exp(p))   # calculate logistic loss
 
-    for wi in w:
-        reg += wi * wi                      # calculate regularization term
-
-    return loss + lmda * reg
+    return loss + lmda * np.dot(w, w)
 
 
 def sgd_logistic(x, y, max_iter, learning_rate, lmda):
     W = np.zeros(x.shape[1])
     # TODO: implement stochastic gradient descent using the logistic loss function
+    condition = False
+    num_steps = 0
+    np.random.seed(1)
+
+    while not condition and num_steps < max_iter:
+        trial = np.random.randint(0, len(y))
+
+        old_loss = logistic_loss(x, y, W, lmda)
+
+        if not cond[trial] == 0:
+            p = -y[trial] * np.dot(W, x[trial, :])
+            gradient = 1 / (1 + math.exp(p)) * math.exp(p) * -y[trial] * x[trial, :]
+            gradient += 2 * lmda * W
+            W -= learning_rate * gradient
+
+            new_loss = logistic_loss(x, y, W, lmda)
+
+            if abs(new_loss - old_loss) <= 0.0001:
+                condition = True
+
+            num_steps += 1
 
     return W
 
@@ -209,16 +226,12 @@ def main():
 
     # Cross validation
     # Development
-    print "Accuracy (Logistic Loss):\t%s" % cross_validation(x, y, sgd_logistic, max_iter=100, lmda=0.3,
-                                                             learning_rate=0.0001, sample=range(20))
-    print "Accuracy (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=1, learning_rate=0.0001,
-                                                          sample=range(20))
+    print "Accuracy (Logistic Loss):\t%s" % cross_validation(x, y, sgd_logistic, max_iter=100, lmda=1, learning_rate=0.0001, sample=range(20))
+    # print "Accuracy (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=0.1, learning_rate=0.015, sample=range(20))
     
     # Test
-    #print "Accuracy (Logistic Loss):\t%s" % cross_validation(x, y, sgd_logistic, max_iter=10, lmda=0.3,
-    #                                                         learning_rate=0.0001, sample=range(20, x.shape[0]))
-    #print "Accuracy (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=1, learning_rate=0.0001,
-    #                                                      sample=range(20, x.shape[0]))
+    print "Accuracy (Logistic Loss):\t%s" % cross_validation(x, y, sgd_logistic, max_iter=10, lmda=1, learning_rate=0.0001, sample=range(20, x.shape[0]))
+    # print "Accuracy (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=0.1, learning_rate=0.015, sample=range(20, x.shape[0]))
 
 
 if __name__ == "__main__":
