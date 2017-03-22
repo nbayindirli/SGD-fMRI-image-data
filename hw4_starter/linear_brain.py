@@ -131,6 +131,7 @@ def sgd_hinge(x, y, max_iter, learning_rate, lmda):
                 converged = True
 
             num_steps += 1                                     # track iterations
+            print "Step number", num_steps, ":", abs(new_loss - old_loss)
 
     return W
 
@@ -170,6 +171,7 @@ def sgd_logistic(x, y, max_iter, learning_rate, lmda):
                 converged = True
 
             num_steps += 1                                 # track iterations
+            print "Step number", num_steps, ":", abs(new_loss - old_loss)
 
     return W
 
@@ -180,11 +182,11 @@ def cross_validation(x, y, sgd, lmda, learning_rate, max_iter=100, sample=range(
     n_incorrect = 0.
     
     for i in sample:
-        # print "CROSS VALIDATION %s" % i
+        print "CROSS VALIDATION %s" % i
         
         training_indices = [j for j in range(x.shape[0]) if j != i]
         W = sgd(x[training_indices, ], y[training_indices, ], max_iter=max_iter, lmda=lmda, learning_rate=learning_rate)
-        # print W
+        print W
         y_hat = np.sign(x[i, ].dot(W))
 
         if y_hat == y[i]:
@@ -192,8 +194,8 @@ def cross_validation(x, y, sgd, lmda, learning_rate, max_iter=100, sample=range(
         else:
             n_incorrect += 1
 
-    print "lambda: ", lmda
-    print "learning rate", learning_rate
+    # print "lambda: ", lmda
+    # print "learning rate: ", learning_rate
 
     return n_correct / (n_correct + n_incorrect)
 
@@ -226,23 +228,13 @@ def main():
     y = y[permutation, ]
 
     # Cross validation
-    print "*"
-
     # Development
-    # print "Accuracy Dev (Logistic Loss):\t%s" % cross_validation(x, y, sgd_logistic, max_iter=100, lmda=0.1, learning_rate=0.001, sample=range(20))
-    print "Accuracy Dev (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=1, learning_rate=0.1, sample=range(20))
-    print "Accuracy Dev (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=1, learning_rate=0.01, sample=range(20))
-    print "Accuracy Dev (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=1, learning_rate=0.001, sample=range(20))
-    print "Accuracy Dev (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=1, learning_rate=0.0001, sample=range(20))
+    print "Accuracy Dev (Logistic Loss):\t%s" % cross_validation(x, y, sgd_logistic, max_iter=100, lmda=0.1, learning_rate=0.001, sample=range(20))
+    print "Accuracy Dev (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=0.1, learning_rate=0.015, sample=range(20))
 
     # Test
-    # print "Accuracy Test (Logistic Loss):\t%s" % cross_validation(x, y, sgd_logistic, max_iter=100, lmda=0.1, learning_rate=0.001, sample=range(20, x.shape[0]))
-    print "Accuracy Test (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=1, learning_rate=0.1, sample=range(20, x.shape[0]))
-    print "Accuracy Test (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=1, learning_rate=0.01, sample=range(20, x.shape[0]))
-    print "Accuracy Test (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=1, learning_rate=0.001, sample=range(20, x.shape[0]))
-    print "Accuracy Test (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=1, learning_rate=0.0001, sample=range(20, x.shape[0]))
-
-    print"*"
+    print "Accuracy Test (Logistic Loss):\t%s" % cross_validation(x, y, sgd_logistic, max_iter=100, lmda=0.1, learning_rate=0.001, sample=range(20, x.shape[0]))
+    print "Accuracy Test (Hinge Loss):\t%s" % cross_validation(x, y, sgd_hinge, max_iter=100, lmda=0.1, learning_rate=0.015, sample=range(20, x.shape[0]))
 
 
 if __name__ == "__main__":
